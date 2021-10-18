@@ -1,0 +1,5 @@
+.env
+/node_modules
+/dump/*.json
+/dump/*.ndjson
+/dump/fauna_schema
