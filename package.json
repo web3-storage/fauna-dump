@@ -15,7 +15,8 @@
     "dotenv": "^10.0.0",
     "faunadb": "^4.4.1",
     "ndjson": "^2.0.0",
-    "ora": "^6.0.1"
+    "ora": "^6.0.1",
+    "p-retry": "^4.6.1"
   },
   "devDependencies": {
     "snazzy": "^9.0.0",
