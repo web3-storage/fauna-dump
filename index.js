@@ -8,7 +8,8 @@ import fs from 'fs'
 
 dotenv.config()
 
-const PAGE_SIZE = process.env.FAUNA_PAGE_SIZE || 1000
+const POINT_IN_TIME = process.env.FAUNA_POINT_IN_TIME || (new Date()).toISOString()
+const PAGE_SIZE = Number.parseInt(process.env.FAUNA_PAGE_SIZE) || 1000
 const OUTPUT_DIR = 'dump'
 const q = faunadb.query
 const client = new faunadb.Client({ secret: process.env.FAUNA_KEY })
@@ -24,14 +25,18 @@ async function * fetchAllDocuments (collectionRef) {
   let after
   do {
     const page = await retry(() => client.query(
-      q.Map(
-        q.Paginate(q.Documents(collectionRef), {
-          size: PAGE_SIZE,
-          after
-        }),
-        q.Lambda(['ref'], q.Get(q.Var('ref')))
+      q.At(
+        q.Time(POINT_IN_TIME),
+        q.Map(
+          q.Paginate(q.Documents(collectionRef), {
+            size: PAGE_SIZE,
+            after
+          }),
+          q.Lambda(['ref'], q.Get(q.Var('ref')))
+        )
       )
     ), { forever: true })
+
     after = page.after
     yield page
   } while (after)
@@ -45,6 +50,7 @@ async function main () {
   }
   const collections = await findAllCollections()
   spinner.stopAndPersist({ symbol: '🗂', text: `Found ${collections.length} collections` })
+  spinner.info(`Querying DB snapshot at ${POINT_IN_TIME}`)
   spinner.info(`Downloading in batches of ${PAGE_SIZE}...`)
   for (const collection of collections) {
     let count = 0
@@ -55,7 +61,7 @@ async function main () {
         for await (const page of source) {
           yield page
           count += page.data.length
-          spinner.text = `${collection.id} ${count} after: ${page?.after}`
+          spinner.text = `${collection.id} ${count} ${page?.after ? `after: ${page?.after}` : ''}`
         }
       },
       async function * stringify (source) {

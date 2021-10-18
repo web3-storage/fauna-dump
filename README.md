@@ -11,6 +11,8 @@ Fetch all the docs from all the collections from the FaunaDB
 **.env**
 ```ini
 FAUNA_KEY=<your key here>
+# FAUNA_POINT_IN_TIME="2021-10-18T15:10:10.575Z"
+# FAUNA_PAGE_SIZE=1000
 ```
 
 The script will log progress to the console and write the data as new-line delimited JSON to the `/dump` dir, with one file per Collection.
